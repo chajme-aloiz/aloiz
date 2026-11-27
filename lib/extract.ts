@@ -6,12 +6,16 @@ import { z } from "zod";
 export type Kid = { id: string; name: string; cls?: string; school?: string };
 export type ImageInput = { media_type: "image/jpeg" | "image/png" | "image/webp" | "image/gif"; data: string };
 export type PdfInput = { data: string };
+/** Už uložená událost, ke které může nový úkol patřit (např. besídka). */
+export type KnownEvent = { id: string; title: string; date: string; childId: string };
 export type Found = {
   id: string; type: "udalost" | "ukol" | "donest"; title: string; date: string; time: string; place: string;
-  childId: string; note: string; uncertain: string; repeat: "" | "weekly"; until: string;
+  childId: string; note: string; uncertain: string; repeat: "" | "weekly"; until: string; parentId: string;
 };
 
 const ItemSchema = z.object({
+  key: z.string(),
+  eventKey: z.string().nullable(),
   type: z.enum(["udalost", "ukol", "donest"]),
   title: z.string(),
   date: z.string().nullable(),
@@ -38,20 +42,25 @@ export function pragueToday(): { iso: string; weekday: string } {
   };
 }
 
-function systemPrompt(kids: Kid[]): string {
+function systemPrompt(kids: Kid[], events: KnownEvent[]): string {
   const t = pragueToday();
   const list = kids.map((c) => ({ id: c.id, jmeno: c.name, trida: c.cls || "", skola: c.school || "" }));
-  return `Jsi Aloiz, pomocník českých rodičů. Ze školní zprávy vytáhni všechno, co mají děti udělat, donést, odevzdat nebo kam a kdy mají přijít.
+  const known = events.map((e) => ({ id: e.id, nazev: e.title, datum: e.date, clen: e.childId }));
+  return `Jsi Aloiz, pomocník českých rodin. Ze zprávy (nejčastěji ze školy) vytáhni všechno, co mají členové rodiny udělat, donést, odevzdat nebo kam a kdy mají přijít.
 Dnešní datum: ${t.iso} (${t.weekday}). Relativní výrazy jako "zítra" nebo "ve středu" převeď na konkrétní datum vzhledem k dnešku.
-Děti rodiče (JSON): ${JSON.stringify(list)}
+Členové rodiny (JSON, děti i dospělí): ${JSON.stringify(list)}
+Už uložené události rodiny (JSON): ${JSON.stringify(known)}
 Pravidla:
 - type: "udalost" (akce s časem nebo místem), "ukol" (něco udělat nebo podepsat), "donest" (věc nebo peníze přinést).
 - date ve tvaru YYYY-MM-DD nebo null, time "HH:MM" nebo null. U "donest" a "ukol" je date termín, do kdy.
-- childId: id dítěte podle jména, třídy, učitele nebo školy. Když má rodič jediné dítě, použij jeho id. Když to nejde určit, null.
+- childId: id člena rodiny podle jména, třídy, učitele nebo školy. Když je v rodině jediný člen, použij jeho id. Když to nejde určit, null.
+- key: krátké označení položky v rámci této odpovědi ("a", "b", "c"...).
+- eventKey: když se úkol nebo věc k donesení týká konkrétní akce (např. donést kytku na besídku, kostým na karneval), dej sem key té události z této odpovědi, nebo id už uložené události. U událostí a nesouvisejících položek null.
+- Když je u zprávy poznámka rodiče, ber ji jako důležitý kontext (např. pro koho to je nebo co platí).
 - uncertain: krátký český popis toho, co chybí nebo je nejisté (např. "Chybí termín"), jinak "".
 - title krátký a výstižný česky, place nebo "", note jedna krátká věta nebo "".
 - repeat: "weekly", když se akce opakuje každý týden (kroužek, "každé úterý"), jinak "". U opakované akce je date první výskyt a until poslední den (YYYY-MM-DD) nebo null, když konec není uveden.
-- U přeposlaného e-mailu ignoruj podpisy, patičky a historii odpovědí, která se netýká dětí.
+- U přeposlaného e-mailu ignoruj podpisy, patičky a historii odpovědí, která se netýká rodiny.
 - Nevymýšlej nic, co ve zprávě není. Když tam nic takového není, vrať prázdný seznam.`;
 }
 
@@ -66,9 +75,9 @@ function anthropic() {
 }
 
 export async function extractItems(input: {
-  kids: Kid[]; text?: string; images?: ImageInput[]; pdfs?: PdfInput[];
+  kids: Kid[]; text?: string; note?: string; images?: ImageInput[]; pdfs?: PdfInput[]; events?: KnownEvent[];
 }): Promise<Found[]> {
-  const { kids, text = "", images = [], pdfs = [] } = input;
+  const { kids, text = "", note = "", images = [], pdfs = [], events = [] } = input;
   if (!text.trim() && !images.length && !pdfs.length) throw new ExtractError("bad_input", "Prázdná zpráva");
 
   const content: Anthropic.ContentBlockParam[] = [];
@@ -76,7 +85,8 @@ export async function extractItems(input: {
   for (const im of images) content.push({ type: "image", source: { type: "base64", media_type: im.media_type, data: im.data } });
   content.push({
     type: "text",
-    text: text.trim() ? "Zpráva:\n" + text.slice(0, 40000) : "Zpráva je v přiložených souborech.",
+    text: (text.trim() ? "Zpráva:\n" + text.slice(0, 40000) : "Zpráva je v přiložených souborech.") +
+      (note.trim() ? "\n\nPoznámka rodiče ke zprávě:\n" + note.slice(0, 2000) : ""),
   });
 
   let res;
@@ -84,7 +94,7 @@ export async function extractItems(input: {
     res = await anthropic().messages.parse({
       model: process.env.CLAUDE_MODEL || "claude-sonnet-5-5",
       max_tokens: 16000,
-      system: systemPrompt(kids),
+      system: systemPrompt(kids, events.slice(0, 60)),
       messages: [{ role: "user", content }],
       output_config: { effort: "medium", format: zodOutputFormat(ResultSchema) },
     });
@@ -98,8 +108,13 @@ export async function extractItems(input: {
   if (!parsed) throw new ExtractError("failed", "Odpověď nešla přečíst");
 
   const ids = new Set(kids.map((k) => k.id));
-  return parsed.items.map((x) => ({
-    id: uid(),
+  const known = new Set(events.map((e) => e.id));
+  const newIds = parsed.items.map(() => uid());
+  const byKey = new Map<string, string>();
+  parsed.items.forEach((x, k) => { if (x.type === "udalost" && x.key) byKey.set(x.key, newIds[k]); });
+  return parsed.items.map((x, k) => ({
+    id: newIds[k],
+    parentId: x.type === "udalost" || !x.eventKey ? "" : byKey.get(x.eventKey) || (known.has(x.eventKey) ? x.eventKey : ""),
     type: x.type,
     title: x.title.slice(0, 140),
     date: isDate(x.date) ? x.date! : "",
@@ -111,4 +126,9 @@ export async function extractItems(input: {
     repeat: x.repeat,
     until: isDate(x.until) ? x.until! : "",
   }));
+}
+
+/** Položka, u které si AI nebyla ničím nejistá: ví se, pro koho je, a událost má datum. Jen takové se smí uložit bez kontroly. */
+export function isCertain(i: Found) {
+  return !!i.childId && !i.uncertain && (i.type !== "udalost" || !!i.date);
 }

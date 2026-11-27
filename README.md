@@ -1,6 +1,6 @@
 # Aloiz
 
-Školní život dětí na jednom místě. Rodič vyfotí lísteček, nahraje PDF, vloží text, namluví zprávu nebo přepošle školní e-mail. Claude z toho vytáhne, co kdy a pro které dítě, rodič to zkontroluje a uloží. Všechno se dá odebírat jako kalendář v telefonu.
+Školní i rodinný život na jednom místě. Rodič vyfotí lísteček, nahraje PDF, vloží text, namluví zprávu nebo přepošle školní e-mail. Claude z toho vytáhne, co kdy a pro koho z rodiny, rodič to zkontroluje a uloží. Všechno se dá odebírat jako kalendář v telefonu.
 
 ## Z čeho se skládá
 
@@ -34,5 +34,6 @@ npm run dev
 - `app/api/inbound`: přijme přeposlaný e-mail z Postmarku, rodiče pozná podle adresy odesílatele a návrhy uloží ke kontrole.
 - `app/api/calendar/[token]`: tajný odkaz na kalendář pro Google, Apple a Outlook, s připomínkami.
 - `supabase/schema.sql`: tabulky a pravidla, aby každý viděl jen svoje data.
+- `supabase/zdroje-a-nastaveni.sql`: doplnění pro už běžící databázi (zdroje s fotkami, úkoly u událostí, ukládání bez kontroly). V novém projektu už je obsažené ve `schema.sql`.
 
 Hlas: aplikace používá rozpoznávání řeči v prohlížeči (Chrome, Safari, Edge). Kde není, zobrazí tip na diktování klávesnicí.
