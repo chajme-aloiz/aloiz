@@ -153,3 +153,18 @@ html,body{margin:0;min-height:100%}
 @media (prefers-reduced-motion:reduce){.switch,.switch::after{transition:none}}
 .big.date{letter-spacing:-.02em}
 .big.date span{margin-left:.14em}
+.famrow{display:flex;align-items:center;gap:14px;width:100%;background:var(--card);border:none;border-radius:20px;padding:16px 18px;text-align:left}
+.famrow b,.fold summary b{display:block;font-weight:500;font-size:16px}
+.famrow small,.fold summary small{display:block;font-size:13px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.famdots{display:flex;flex:none}
+.famdots i{width:14px;height:14px;border-radius:7px;border:2px solid var(--card);margin-left:-5px}
+.famdots i:first-child{margin-left:0}
+.folds{margin-top:10px;background:var(--card);border-radius:20px;padding:0 18px}
+.fold{border-bottom:1px solid var(--line)}
+.fold:last-child{border-bottom:none}
+.fold summary{list-style:none;display:flex;align-items:center;gap:12px;padding:16px 0;cursor:pointer}
+.fold summary::-webkit-details-marker{display:none}
+.fold summary>span{flex:1;min-width:0}
+.fold summary svg{flex:none;color:var(--muted);transition:transform .2s}
+.fold[open] summary svg{transform:rotate(90deg)}
+.foldbody{padding:0 0 18px}
