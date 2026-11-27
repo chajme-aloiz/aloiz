@@ -10,6 +10,13 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: "#F6F5F1",
     theme_color: "#F6F5F1",
     lang: "cs",
+    // Aloiz v nabídce „Sdílet“ na Androidu (po přidání na plochu)
+    share_target: {
+      action: "/share",
+      method: "post",
+      enctype: "multipart/form-data",
+      params: { title: "title", text: "text", url: "url", files: [{ name: "files", accept: ["image/*", "application/pdf", ".pdf"] }] },
+    },
     icons: [
       { src: "/icon.svg", sizes: "any", type: "image/svg+xml" },
       { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
