@@ -11,6 +11,7 @@
 | Přihlášení a data | Supabase | zdarma |
 | Čtení zpráv | Claude API (Anthropic) | platí se za použití, řádově desetníky za zprávu |
 | Přeposílání e-mailů | Postmark Inbound | zdarma do 100 e-mailů měsíčně |
+| Upozornění a ranní souhrn | Web Push v prohlížeči + plánovač pg_cron v Supabase | zdarma |
 
 ## Nastavení krok za krokem
 
@@ -18,6 +19,8 @@
 2. **Claude API**: na console.anthropic.com vytvořte API klíč a nastavte měsíční limit útraty.
 3. **Vercel**: *Add New Project* z GitHub repozitáře `aloiz`, v *Environment Variables* vyplňte hodnoty podle `.env.example`.
 4. **Postmark** (přeposílání e-mailů): server, záložka *Inbound*, webhook `https://<adresa-aplikace>/api/inbound?key=<INBOUND_SECRET>`. Inbound adresu zapište do `NEXT_PUBLIC_INBOUND_ADDRESS`. Až bude doména `aloiz.cz`, nasměruje se na Postmark adresa `sdilet@aloiz.cz`.
+
+5. **Upozornění**: v Supabase spusťte `supabase/upozorneni.sql`. Otevřete `https://<adresa-aplikace>/api/push/setup`, tři hodnoty vložte do Vercelu (VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, CRON_SECRET), udělejte Redeploy a příkaz ze stránky spusťte v Supabase SQL Editoru. V Aloizu pak *Nastavení > Upozornění > Zapnout*. Na iPhonu jen z ikony na ploše (Safari > Sdílet > Přidat na plochu).
 
 ## Vývoj na počítači
 
@@ -33,6 +36,7 @@ npm run dev
 - `app/api/extract`: přijme text, fotky nebo PDF a pošle je Claude (`lib/extract.ts`).
 - `app/api/inbound`: přijme přeposlaný e-mail z Postmarku, rodiče pozná podle adresy odesílatele a návrhy uloží ke kontrole.
 - `app/api/calendar/[token]`: tajný odkaz na kalendář pro Google, Apple a Outlook, s připomínkami.
+- `app/api/push/cron`: každých 5 minut (volá ho pg_cron v Supabase) pošle ranní a večerní souhrn a připomínky (`lib/notify.ts`, `lib/push.ts`, `public/sw.js`).
 - `supabase/schema.sql`: tabulky a pravidla, aby každý viděl jen svoje data.
 
 Hlas: aplikace používá rozpoznávání řeči v prohlížeči (Chrome, Safari, Edge). Kde není, zobrazí tip na diktování klávesnicí.

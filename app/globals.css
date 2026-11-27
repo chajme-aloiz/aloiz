@@ -113,3 +113,15 @@ html,body{margin:0;min-height:100%}
 .voice{display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px 0 6px;text-align:center}
 .addr{font-weight:500;color:var(--ink);word-break:break-all}
 .inboxcard{background:var(--card);border-radius:20px;padding:16px 20px;margin-top:28px;box-shadow:inset 0 0 0 1.5px var(--rasp)}
+/* Upozornění */
+.opt{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);min-height:52px}
+.opt:last-child{border-bottom:none}
+.opt label{flex:1;font-size:15px;line-height:1.35}
+.opt input[type=time]{width:auto;flex:none;border:none;padding:6px 0;min-height:40px;font-variant-numeric:tabular-nums}
+.opt input[type=time]:disabled{opacity:.4}
+.opt select{flex:none;border:none;min-height:40px}
+.switch{appearance:none;-webkit-appearance:none;flex:none;width:44px;height:26px;border-radius:13px;background:var(--line);position:relative;margin:0;cursor:pointer;transition:background .2s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s}
+.switch:checked{background:var(--rasp-btn)}
+.switch:checked::after{transform:translateX(18px)}
+@media (prefers-reduced-motion:reduce){.switch,.switch::after{transition:none}}
