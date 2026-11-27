@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Aloiz",
-  description: "Školní život dětí na jednom místě. Vyfoťte lísteček, přepošlete e-mail nebo to řekněte nahlas.",
+  description: "Školní i rodinný život na jednom místě. Vyfoťte lísteček, přepošlete e-mail nebo to řekněte nahlas.",
   appleWebApp: { capable: true, title: "Aloiz", statusBarStyle: "default" },
   icons: { icon: "/icon.svg", apple: "/apple-icon.png" },
 };

@@ -38,3 +38,6 @@ alter table public.notify_log enable row level security;
 
 grant select, insert, update, delete on public.push_subs to authenticated;
 grant all on public.push_subs, public.notify_log to service_role;
+
+-- Ať Data API hned ví o nových sloupcích
+notify pgrst, 'reload schema';

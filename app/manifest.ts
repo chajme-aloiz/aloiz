@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Aloiz",
     short_name: "Aloiz",
-    description: "Školní život dětí na jednom místě",
+    description: "Školní i rodinný život na jednom místě",
     start_url: "/",
     display: "standalone",
     background_color: "#F6F5F1",
