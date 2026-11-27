@@ -40,7 +40,7 @@ export default function Soukromi() {
       <p>Svá data vidíte jen vy po přihlášení. Odkaz na kalendář k odběru je tajný: kdo ho zná, uvidí vaše události, proto ho sdílejte jen s blízkými.</p>
 
       <h2 style={s.h2}>Smazání dat</h2>
-      <p>Položky i členy rodiny můžete kdykoli smazat přímo v aplikaci. Upozornění vypnete v Nastavení. Pokud chcete smazat celý účet se všemi daty, napište nám{contact ? <> na <a href={"mailto:" + contact}>{contact}</a></> : " na e-mail uvedený u aplikace"}, smažeme ho do 30 dnů.</p>
+      <p>Položky i členy rodiny můžete kdykoli smazat přímo v aplikaci. Upozornění vypnete v Nastavení. Celý účet se všemi daty (včetně nahraných fotek a e-mailů) zrušíte v Nastavení tlačítkem <b>Zrušit účet</b>. Smaže se hned a nejde obnovit.</p>
 
       <h2 style={s.h2}>Cookies</h2>
       <p>Aloiz neužívá reklamní ani analytické cookies. V prohlížeči si ukládá jen to, co je nutné pro přihlášení a pro vaše drobná nastavení.</p>
