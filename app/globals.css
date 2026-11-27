@@ -186,3 +186,13 @@ textarea,input[type=text],input[type=email],input[type=number],input[type=date],
 textarea:focus,input[type=text]:focus,input[type=email]:focus,input[type=number]:focus,input[type=date]:focus,input[type=time]:focus{border-color:var(--muted);outline:none}
 .nopt input[type=time]{border:1px solid var(--line);padding:6px 10px}
 .leadcustom input[type=number]{padding:6px 8px}
+/* Aloiz pracuje: „ai“ z loga, kolem obíhají tečky */
+.aiwait{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--paper) 82%,transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);animation:aiw-in .25s ease-out}
+.aiwait-box{display:flex;flex-direction:column;align-items:center;gap:14px}
+.aiwait-t{font-size:17px;color:var(--ink);letter-spacing:.01em}
+.aiwait svg{overflow:visible}
+.aiw-orbit{transform-box:view-box;transform-origin:70px 70px;animation:sp 1.4s cubic-bezier(.5,.1,.5,.9) infinite}
+.aiw-dot{transform-box:fill-box;transform-origin:center;animation:aiw-pulse 1.4s ease-in-out infinite}
+@keyframes aiw-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.6)}}
+@keyframes aiw-in{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.aiw-orbit,.aiw-dot{animation:none}}
