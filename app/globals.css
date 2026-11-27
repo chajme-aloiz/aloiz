@@ -151,3 +151,5 @@ html,body{margin:0;min-height:100%}
 .switch:checked{background:var(--rasp-btn)}
 .switch:checked::after{transform:translateX(18px)}
 @media (prefers-reduced-motion:reduce){.switch,.switch::after{transition:none}}
+.big.date{letter-spacing:-.02em}
+.big.date span{margin-left:.14em}
