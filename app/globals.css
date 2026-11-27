@@ -196,3 +196,5 @@ textarea:focus,input[type=text]:focus,input[type=email]:focus,input[type=number]
 @keyframes aiw-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.4)}}
 @keyframes aiw-in{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){.aiw-orbit,.aiw-dot{animation:none}}
+/* Zadat ručně: bílé pozadí, text, ikona i linka malinové jako Vložit */
+.btn.ghost.manual{background:#FFFFFF;color:var(--rasp-btn);border-color:var(--rasp-btn)}
