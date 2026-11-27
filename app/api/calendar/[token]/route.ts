@@ -3,7 +3,7 @@ import { adminClient } from "@/lib/supabase-server";
 
 type Row = {
   id: string; child_id: string | null; type: string; title: string; due_date: string; due_time: string;
-  place: string; note: string; done: boolean; repeat_rule: string; repeat_until: string; skip_dates: string[];
+  place: string; note: string; done: boolean; repeat_rule: string; repeat_until: string; skip_dates: string[]; remind?: string;
 };
 
 const esc = (s: string) => String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
@@ -30,7 +30,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
   const clean = token.replace(/\.ics$/, "");
   if (!/^[a-f0-9]{20,64}$/.test(clean)) return new Response("not found", { status: 404 });
   const db = adminClient();
-  const { data: profile } = await db.from("profiles").select("id").eq("feed_token", clean).maybeSingle();
+  const { data: profile } = await db.from("profiles").select("*").eq("feed_token", clean).maybeSingle();
   if (!profile) return new Response("not found", { status: 404 });
 
   const [{ data: kids }, { data: items }] = await Promise.all([
@@ -59,8 +59,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     lines.push(fold("SUMMARY:" + esc((kid ? kid + ": " : "") + prefix + it.title)));
     if (it.place) lines.push(fold("LOCATION:" + esc(it.place)));
     if (it.note) lines.push(fold("DESCRIPTION:" + esc(it.note)));
-    // Připomínka: u akce s časem hodinu předem, u celodenních večer předtím (18:00)
-    lines.push("BEGIN:VALARM", "ACTION:DISPLAY", "TRIGGER:" + (it.due_time ? "-PT1H" : "-PT6H"), fold("DESCRIPTION:" + esc(it.title)), "END:VALARM");
+    // Připomínka: podle položky, jinak u akce s časem podle nastavení (výchozí hodinu předem), u celodenních večer předtím (18:00)
+    const r = (it.remind || "").trim();
+    const lead = r === "off" ? null : /^-?\d+$/.test(r) ? Number(r) : it.due_time ? (profile.event_lead ?? 60) || null : 360;
+    if (lead !== null) {
+      const trig = (lead >= 0 ? "-PT" : "PT") + Math.abs(lead) + "M";
+      lines.push("BEGIN:VALARM", "ACTION:DISPLAY", "TRIGGER:" + trig, fold("DESCRIPTION:" + esc(it.title)), "END:VALARM");
+    }
     lines.push("END:VEVENT");
     return lines.join("\r\n");
   });
