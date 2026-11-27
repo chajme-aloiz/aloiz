@@ -82,3 +82,11 @@ end $$;
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- Oprávnění pro Data API. Nové projekty Supabase je už nedávají automaticky,
+-- bez nich končí čtení i ukládání chybou 403 (permission denied).
+-- Které řádky kdo uvidí, dál hlídají pravidla RLS výše.
+grant usage on schema public to anon, authenticated, service_role;
+grant select, insert, update, delete on public.profiles, public.children, public.items to authenticated;
+grant select, delete on public.inbox to authenticated;
+grant all on public.profiles, public.children, public.items, public.inbox to service_role;
