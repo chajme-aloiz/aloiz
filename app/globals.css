@@ -176,3 +176,6 @@ html,body{margin:0;min-height:100%}
 .leadcustom select{width:auto;flex:none}
 .nopt .leadpick{flex:none;align-items:flex-end}
 .nopt .leadcustom input[type=number],.nopt .leadcustom select{border:1px solid var(--line);min-height:40px}
+/* Ikonka koše v tlačítkách, která mažou: malinová jako hlavní tlačítko */
+.btn .ico-trash{color:var(--rasp-btn);flex:none;margin-left:-4px}
+.btn.small{gap:8px}
