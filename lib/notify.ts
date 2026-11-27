@@ -112,13 +112,25 @@ export function leadFor(it: Item, s: Settings): number | null {
   return lead > 0 ? lead : null;
 }
 
+const pl = (n: number, one: string, few: string, many: string) => (n === 1 ? one : n >= 2 && n <= 4 ? few : many);
+
 function leadText(lead: number, timed: boolean) {
   if (!timed) return "";
   if (lead === 0) return "Teď";
   if (lead < 60) return "Za " + lead + " min";
-  if (lead % 1440 === 0) return lead === 1440 ? "Zítra" : "Za " + lead / 1440 + " dny";
+  if (lead % 10080 === 0) { const n = lead / 10080; return n === 1 ? "Za týden" : "Za " + n + " " + pl(n, "týden", "týdny", "týdnů"); }
+  if (lead % 1440 === 0) { const n = lead / 1440; return n === 1 ? "Zítra" : "Za " + n + " " + pl(n, "den", "dny", "dní"); }
   if (lead % 60 === 0) return "Za " + (lead / 60 === 1 ? "hodinu" : lead / 60 + " h");
   return "Za " + Math.floor(lead / 60) + " h " + (lead % 60) + " min";
+}
+
+/** Celodenní položka: kdy to je, vzhledem k dnešku. */
+function dayText(date: string, today: string) {
+  const n = Math.round((Date.parse(date + "T12:00:00Z") - Date.parse(today + "T12:00:00Z")) / 86400000);
+  if (n <= 0) return "Dnes";
+  if (n === 1) return "Zítra";
+  if (n % 7 === 0) return n === 7 ? "Za týden" : "Za " + n / 7 + " " + pl(n / 7, "týden", "týdny", "týdnů");
+  return "Za " + n + " " + pl(n, "den", "dny", "dní");
 }
 
 /**
@@ -144,14 +156,18 @@ export function dueNotes(now: Date, s: Settings, items: Item[], kidList: Kid[], 
   }
 
   const t = now.getTime();
-  for (const it of expand(items, addDays(local.date, -1), addDays(local.date, 3))) {
+  // Jak daleko dopředu hledat: podle nejdelší nastavené připomínky (klidně týdny), nejvýš rok.
+  let maxLead = 0;
+  for (const it of items) { const l = leadFor(it, s); if (l !== null && l > maxLead) maxLead = l; }
+  const ahead = Math.min(370, Math.max(3, Math.ceil(maxLead / 1440) + 2));
+  for (const it of expand(items, addDays(local.date, -1), addDays(local.date, ahead))) {
     if (!open(it)) continue;
     const lead = leadFor(it, s);
     if (lead === null) continue;
     const fire = zonedMs(it.due_date, it.due_time || "00:00", tz) - lead * 60000;
     if (fire > t || t - fire >= windowMin * 60000) continue;
     const kid = it.child_id ? kids.get(it.child_id) : "";
-    const when = it.due_time ? leadText(lead, true) + " · " + it.due_time : (it.due_date === local.date ? "Dnes" : "Zítra");
+    const when = it.due_time ? leadText(lead, true) + " · " + it.due_time : dayText(it.due_date, local.date);
     const prefix = it.type === "donest" ? "Donést: " : it.type === "ukol" ? "Úkol: " : "";
     notes.push({
       key: `item:${it.id}:${it.occ}:${lead}`,
