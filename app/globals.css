@@ -2,7 +2,7 @@
   --paper:#F6F5F1; --card:#FFFFFF; --ink:#17171A; --muted:#6B6A66; --line:#E4E2DC; --soft:#EDEBE5;
   --rasp:#E6215C; --rasp-btn:#D41A52; --on-rasp:#FFFFFF; --warn:#D9A441; --warn-ink:#8A5A00;
   --logo-dark:#1A1A1A;
-  --font:'Geist',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font:'Urbanist',system-ui,-apple-system,'Segoe UI',sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --paper:#141416; --card:#1E1E21; --ink:#F2F1EC; --muted:#A3A29C; --line:#2E2E32; --soft:#26262A;
