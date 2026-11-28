@@ -41,7 +41,7 @@ export async function POST(req: Request) {
   if (!profile) { console.warn("inbound: unknown sender"); return Response.json({ ok: true, matched: false }); }
   if (!emailAllowed(profile.email)) return Response.json({ ok: true, matched: false });
 
-  const { data: kids } = await db.from("children").select("id,name,cls,school").eq("user_id", profile.id);
+  const { data: kids } = await db.from("children").select("id,name,cls,school,nicks").eq("user_id", profile.id);
   const today = new Date().toISOString().slice(0, 10);
   const { data: evRows } = await db.from("items").select("id,title,due_date,child_id").eq("user_id", profile.id)
     .eq("type", "udalost").gte("due_date", today).order("due_date").limit(60);

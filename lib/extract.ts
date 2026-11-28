@@ -4,7 +4,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { AI_LANG, type Lang } from "./i18n-server";
 
-export type Kid = { id: string; name: string; cls?: string; school?: string };
+export type Kid = { id: string; name: string; cls?: string; school?: string; nicks?: string };
 export type ImageInput = { media_type: "image/jpeg" | "image/png" | "image/webp" | "image/gif"; data: string };
 export type PdfInput = { data: string };
 /** Už uložená událost, ke které může nový úkol patřit (např. besídka). */
@@ -46,7 +46,7 @@ export function pragueToday(): { iso: string; weekday: string } {
 function systemPrompt(kids: Kid[], events: KnownEvent[], lang: Lang): string {
   const out = AI_LANG[lang];
   const t = pragueToday();
-  const list = kids.map((c) => ({ id: c.id, jmeno: c.name, trida: c.cls || "", skola: c.school || "" }));
+  const list = kids.map((c) => ({ id: c.id, jmeno: c.name, prezdivky: c.nicks || "", trida: c.cls || "", skola: c.school || "" }));
   const known = events.map((e) => ({ id: e.id, nazev: e.title, datum: e.date, clen: e.childId }));
   return `Jsi Aloiz, pomocník rodin. Ze zprávy (nejčastěji ze školy) vytáhni všechno, co mají členové rodiny udělat, donést, odevzdat nebo kam a kdy mají přijít.
 Dnešní datum: ${t.iso} (${t.weekday}). Relativní výrazy jako "zítra" nebo "ve středu" převeď na konkrétní datum vzhledem k dnešku.
@@ -55,7 +55,7 @@ Už uložené události rodiny (JSON): ${JSON.stringify(known)}
 Pravidla:
 - type: "udalost" (akce s časem nebo místem), "ukol" (cokoli udělat, podepsat, zaplatit, odevzdat nebo donést, např. věc nebo peníze).
 - date ve tvaru YYYY-MM-DD nebo null, time "HH:MM" nebo null. U "ukol" je date termín, do kdy.
-- childId: id člena rodiny podle jména, třídy, učitele nebo školy. Když je v rodině jediný člen, použij jeho id. Když to nejde určit, null.
+- childId: id člena rodiny podle jména, třídy, učitele nebo školy. Jméno porovnávej i se zdrobnělinami, domáckými a skloňovanými tvary a s přezdívkami u člena (např. Alži, Bětka, Alžbětka = Alžběta; Kuba, Kubík = Jakub; Emičce = Ema). Když je v rodině jediný člen, použij jeho id. Když to nejde určit, null.
 - key: krátké označení položky v rámci této odpovědi ("a", "b", "c"...).
 - eventKey: když se úkol nebo věc k donesení týká konkrétní akce (např. donést kytku na besídku, kostým na karneval), dej sem key té události z této odpovědi, nebo id už uložené události. U událostí a nesouvisejících položek null.
 - Když je u zprávy poznámka rodiče, ber ji jako důležitý kontext (např. pro koho to je nebo co platí).
