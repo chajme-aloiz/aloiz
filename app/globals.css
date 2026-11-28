@@ -206,3 +206,11 @@ textarea:focus,input[type=text]:focus,input[type=email]:focus,input[type=number]
 @media (prefers-reduced-motion:reduce){.aiw-orbit,.aiw-dot{animation:none}}
 /* Zadat ručně: bílé pozadí, text, ikona i linka malinové jako Vložit */
 .btn.ghost.manual{background:#FFFFFF;color:var(--rasp-btn);border-color:var(--rasp-btn)}
+/* Úvod: jeden výběr člena + odkaz na celý přehled, nadpisy Dnes / Další 2 týdny */
+.whorow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px}
+.chip.who svg{width:16px;height:16px;transform:rotate(90deg);margin-left:2px;margin-right:-4px;transition:transform .15s}
+.chip.who[aria-expanded="true"] svg{transform:rotate(-90deg)}
+.whorow .linkbtn{display:inline-flex;align-items:center;gap:2px;font-size:15px;color:var(--muted);min-height:40px}
+.whorow .linkbtn svg{width:16px;height:16px}
+.subhead{font-size:22px;font-weight:400;line-height:1.2;margin:34px 0 0;letter-spacing:-.01em}
+.subhead + .sec{margin-top:6px}
