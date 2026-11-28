@@ -2,6 +2,7 @@
 import { adminClient, userFromRequest } from "@/lib/supabase-server";
 import { pushConfigured, sendToUser } from "@/lib/push";
 import { dayDigest, localNow, type Item, type Kid } from "@/lib/notify";
+import { S, normLang } from "@/lib/i18n-server";
 
 export async function POST(req: Request) {
   const user = await userFromRequest(req);
@@ -14,10 +15,11 @@ export async function POST(req: Request) {
     db.from("items").select("*").eq("user_id", user.id).neq("due_date", ""),
   ]);
   const day = localNow(new Date(), profile?.tz || "Europe/Prague").date;
-  const body = dayDigest((items || []) as Item[], (kids || []) as Kid[], day);
+  const lang = normLang(profile?.lang);
+  const body = dayDigest((items || []) as Item[], (kids || []) as Kid[], day, lang);
   const sent = await sendToUser(db, user.id, {
-    title: "Aloiz: zkušební upozornění",
-    body: body ? "Takhle bude vypadat ranní souhrn:\n" + body : "Funguje to. Na dnešek a zítřek zatím nic nemáte.",
+    title: S[lang].testTitle,
+    body: body ? S[lang].testBody + body : S[lang].testEmpty,
     tag: "test",
   });
   return Response.json({ sent });

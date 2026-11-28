@@ -1,6 +1,7 @@
 // POST /api/extract: aplikace pošle text, fotky nebo PDF, vrátí nalezené položky ke kontrole.
 import { extractItems, ExtractError, type ImageInput, type Kid, type KnownEvent, type PdfInput } from "@/lib/extract";
 import { emailAllowed, userFromRequest } from "@/lib/supabase-server";
+import { normLang } from "@/lib/i18n-server";
 
 export const maxDuration = 60;
 
@@ -11,7 +12,7 @@ export async function POST(req: Request) {
   if (!user) return Response.json({ error: "login" }, { status: 401 });
   if (!emailAllowed(user.email)) return Response.json({ error: "not_allowed" }, { status: 403 });
 
-  let body: { text?: string; note?: string; images?: ImageInput[]; pdfs?: PdfInput[]; kids?: Kid[]; events?: KnownEvent[] };
+  let body: { text?: string; note?: string; images?: ImageInput[]; pdfs?: PdfInput[]; kids?: Kid[]; events?: KnownEvent[]; lang?: string };
   try { body = await req.json(); } catch { return Response.json({ error: "bad_input" }, { status: 400 }); }
 
   const images = (body.images || []).filter((i) => IMAGE_TYPES.has(i.media_type) && typeof i.data === "string").slice(0, 6);
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
     .slice(0, 60).map((e) => ({ id: e.id, title: e.title.slice(0, 140), date: String(e.date || ""), childId: String(e.childId || "") }));
 
   try {
-    const items = await extractItems({ kids, text: String(body.text || ""), note: String(body.note || ""), images, pdfs, events });
+    const items = await extractItems({ kids, text: String(body.text || ""), note: String(body.note || ""), images, pdfs, events, lang: normLang(body.lang) });
     return Response.json({ items });
   } catch (e) {
     const code = e instanceof ExtractError ? e.code : "failed";

@@ -10,7 +10,6 @@ self.addEventListener("push", (e) => {
     tag: d.tag || undefined,
     icon: "/icon-512.png",
     badge: "/badge.png",
-    lang: "cs",
     data: { url: d.url || "/" },
   }));
 });
