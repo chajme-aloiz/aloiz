@@ -1,5 +1,6 @@
 // GET /api/calendar/<tajný-kód>: kalendář k odběru (Google, Apple, Outlook se k němu přihlásí a samy ho obnovují).
 import { adminClient } from "@/lib/supabase-server";
+import { normLang, typePrefix } from "@/lib/i18n-server";
 
 type Row = {
   id: string; child_id: string | null; type: string; title: string; due_date: string; due_time: string;
@@ -37,12 +38,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     db.from("children").select("id,name").eq("user_id", profile.id),
     db.from("items").select("*").eq("user_id", profile.id).neq("due_date", ""),
   ]);
+  const lang = normLang(profile.lang);
   const name = new Map((kids || []).map((k) => [k.id, k.name as string]));
   const stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
 
   const events = ((items || []) as Row[]).filter((it) => !(it.type !== "udalost" && it.done)).map((it) => {
     const kid = it.child_id ? name.get(it.child_id) : "";
-    const prefix = it.type === "donest" ? "Donést: " : it.type === "ukol" ? "Úkol: " : "";
+    const prefix = typePrefix(it.type, lang);
     const lines = ["BEGIN:VEVENT", "UID:" + it.id + "@aloiz", "DTSTAMP:" + stamp];
     if (it.due_time) {
       lines.push("DTSTART;TZID=Europe/Prague:" + compact(it.due_date) + "T" + it.due_time.replace(":", "") + "00");

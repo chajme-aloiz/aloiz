@@ -21,6 +21,7 @@
 4. **Postmark** (přeposílání e-mailů): server, záložka *Inbound*, webhook `https://<adresa-aplikace>/api/inbound?key=<INBOUND_SECRET>`. Inbound adresu zapište do `NEXT_PUBLIC_INBOUND_ADDRESS`. Až bude doména `aloiz.cz`, nasměruje se na Postmark adresa `sdilet@aloiz.cz`.
 
 5. **Upozornění**: v Supabase spusťte `supabase/upozorneni.sql`. Otevřete `https://<adresa-aplikace>/api/push/setup`, tři hodnoty vložte do Vercelu (VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, CRON_SECRET), udělejte Redeploy a příkaz ze stránky spusťte v Supabase SQL Editoru. V Aloizu pak *Nastavení > Upozornění > Zapnout*. Na iPhonu jen z ikony na ploše (Safari > Sdílet > Přidat na plochu).
+6. **Jazyky**: v Supabase spusťte `supabase/jazyk.sql`. Aplikace je v 9 jazycích (cs, en, sk, pl, de, es, fr, zh, hi), výchozí podle zařízení, přepínač na přihlášení a v *Nastavení > Jazyk*. Texty jsou v `lib/i18n/`, serverové (upozornění, kalendář, e-maily) v `lib/i18n-server.ts`.
 
 ## Vývoj na počítači
 
@@ -38,6 +39,7 @@ npm run dev
 - `app/api/calendar/[token]`: tajný odkaz na kalendář pro Google, Apple a Outlook, s připomínkami.
 - `app/api/push/cron`: každých 5 minut (volá ho pg_cron v Supabase) pošle ranní a večerní souhrn a připomínky (`lib/notify.ts`, `lib/push.ts`, `public/sw.js`).
 - `supabase/schema.sql`: tabulky a pravidla, aby každý viděl jen svoje data.
+- `supabase/jazyk.sql`: sloupec `lang` v profilu (jazyk upozornění, kalendáře a přeposlaných e-mailů). V novém projektu už je obsažené ve `schema.sql`.
 - `supabase/zdroje-a-nastaveni.sql`: doplnění pro už běžící databázi (zdroje s fotkami, úkoly u událostí, ukládání bez kontroly). V novém projektu už je obsažené ve `schema.sql`.
 
 Hlas: aplikace používá rozpoznávání řeči v prohlížeči (Chrome, Safari, Edge). Kde není, zobrazí tip na diktování klávesnicí.

@@ -141,6 +141,8 @@ alter table public.profiles add column if not exists evening_on boolean not null
 alter table public.profiles add column if not exists evening_time text not null default '19:00';
 alter table public.profiles add column if not exists event_lead integer not null default 60;  -- minut před akcí s časem, 0 = nepřipomínat
 alter table public.profiles add column if not exists tz text not null default 'Europe/Prague';
+-- Jazyk aplikace (cs, en, sk, pl, de, es, fr, zh, hi); prázdné = zatím nevybráno
+alter table public.profiles add column if not exists lang text not null default '';
 
 -- Upozornění u jedné položky: '' = podle nastavení, 'off' = žádné, číslo = minut před začátkem
 -- (u celodenních se počítá od půlnoci, záporné číslo = až v ten den, např. -420 = v 7:00)

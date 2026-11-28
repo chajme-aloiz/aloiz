@@ -1,51 +1,60 @@
 import type { Metadata } from "next";
-
-export const metadata: Metadata = { title: "Ochrana soukromí · Aloiz" };
+import { cookies, headers } from "next/headers";
+import { LANG_CODES, normLang, type Lang } from "@/lib/i18n-server";
+import { PRIVACY } from "./texts";
 
 const s = { wrap: { maxWidth: 640, margin: "0 auto", padding: "32px 0 80px", lineHeight: 1.6 }, h2: { fontSize: 20, fontWeight: 500, marginTop: 32 } } as const;
 
-export default function Soukromi() {
+/** Jazyk stránky: volba z aplikace (cookie), jinak jazyk prohlížeče, jinak angličtina. */
+async function pageLang(): Promise<Lang> {
+  const c = (await cookies()).get("aloiz-lang")?.value;
+  if (c && (LANG_CODES as readonly string[]).includes(c)) return normLang(c);
+  const accept = (await headers()).get("accept-language") || "";
+  for (const part of accept.split(",")) {
+    const code = part.trim().split(/[-_;]/)[0].toLowerCase();
+    if ((LANG_CODES as readonly string[]).includes(code)) return normLang(code);
+  }
+  return "en";
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: PRIVACY[await pageLang()].title + " · Aloiz" };
+}
+
+export default async function Soukromi() {
+  const lang = await pageLang();
+  const p = PRIVACY[lang];
   const contact = process.env.CONTACT_EMAIL;
   return (
-    <main style={s.wrap}>
-      <p><a href="/" style={{ color: "inherit" }}>← Zpět do Aloizu</a></p>
-      <h1 style={{ fontSize: 34, marginTop: 16 }}>Ochrana soukromí</h1>
-      <p className="muted">Platí od 27. listopadu 2026.</p>
+    <main style={s.wrap} lang={lang === "zh" ? "zh-Hans" : lang}>
+      <p><a href="/" style={{ color: "inherit" }}>{p.back}</a></p>
+      <h1 style={{ fontSize: 34, marginTop: 16 }}>{p.title}</h1>
+      <p className="muted">{p.valid}</p>
 
-      <p>Aloiz pomáhá rodičům mít přehled o školních akcích, úkolech a věcech, které mají děti donést. Tady najdete, jaká data Aloiz ukládá, k čemu je používá a kdo je může vidět.</p>
+      <p>{p.intro}</p>
 
-      <h2 style={s.h2}>Jaká data ukládáme</h2>
+      <h2 style={s.h2}>{p.dataH}</h2>
+      <ul>{p.data.map((x) => <li key={x}>{x}</li>)}</ul>
+
+      <h2 style={s.h2}>{p.useH}</h2>
+      <p>{p.use}</p>
+
+      <h2 style={s.h2}>{p.whoH}</h2>
       <ul>
-        <li>E-mailovou adresu, se kterou se přihlásíte (e-mailem nebo přes Google). Z účtu Google získáme jen jméno a e-mail, nic dalšího.</li>
-        <li>Členy rodiny, které zadáte: jméno, případně třídu a školu.</li>
-        <li>Události, úkoly a věci k donesení, včetně poznámek.</li>
-        <li>Zdroje, ze kterých položky vznikly: nahrané fotky a PDF, vložený nebo namluvený text a přeposlané e-maily.</li>
-        <li>Pokud zapnete upozornění, technický údaj o zařízení, na které je posíláme, a nastavení upozornění.</li>
+        {p.who.map(([name, what]) => <li key={name}><b>{name}</b>{lang === "zh" ? "：" : ": "}{what}</li>)}
+        <li>{p.whoNote}</li>
       </ul>
 
-      <h2 style={s.h2}>K čemu data používáme</h2>
-      <p>Jen k tomu, aby Aloiz fungoval: aby zobrazil váš přehled, poslal upozornění a nabídl kalendář k odběru. Data neprodáváme, nepoužíváme k reklamě a nesdílíme s nikým kromě služeb níže, bez kterých by Aloiz nefungoval.</p>
+      <h2 style={s.h2}>{p.seeH}</h2>
+      <p>{p.see}</p>
 
-      <h2 style={s.h2}>Kdo data zpracovává</h2>
-      <ul>
-        <li><b>Supabase</b>: databáze a úložiště souborů (servery v EU, Frankfurt).</li>
-        <li><b>Vercel</b>: provoz webové aplikace.</li>
-        <li><b>Anthropic (Claude)</b>: přečte nahranou fotku, PDF, text nebo e-mail a vytáhne z nich termíny a úkoly. Obsah se k tomu odešle jen v okamžiku čtení a Anthropic ho nepoužívá k trénování svých modelů.</li>
-        <li><b>Postmark</b>: přijímá e-maily, které do Aloizu přepošlete.</li>
-        <li><b>Google</b>: přihlášení přes účet Google, pokud ho zvolíte.</li>
-        <li>Upozornění doručuje služba výrobce vašeho prohlížeče (např. Google nebo Apple).</li>
-      </ul>
+      <h2 style={s.h2}>{p.delH}</h2>
+      <p>{p.del[0]}<b>{p.del[1]}</b>{p.del[2]}</p>
 
-      <h2 style={s.h2}>Kdo data vidí</h2>
-      <p>Svá data vidíte jen vy po přihlášení. Odkaz na kalendář k odběru je tajný: kdo ho zná, uvidí vaše události, proto ho sdílejte jen s blízkými.</p>
+      <h2 style={s.h2}>{p.cookiesH}</h2>
+      <p>{p.cookies}</p>
 
-      <h2 style={s.h2}>Smazání dat</h2>
-      <p>Položky i členy rodiny můžete kdykoli smazat přímo v aplikaci. Upozornění vypnete v Nastavení. Celý účet se všemi daty (včetně nahraných fotek a e-mailů) zrušíte v Nastavení tlačítkem <b>Zrušit účet</b>. Smaže se hned a nejde obnovit.</p>
-
-      <h2 style={s.h2}>Cookies</h2>
-      <p>Aloiz neužívá reklamní ani analytické cookies. V prohlížeči si ukládá jen to, co je nutné pro přihlášení a pro vaše drobná nastavení.</p>
-
-      {contact ? (<><h2 style={s.h2}>Kontakt</h2><p><a href={"mailto:" + contact}>{contact}</a></p></>) : null}
+      {contact ? (<><h2 style={s.h2}>{p.contactH}</h2><p><a href={"mailto:" + contact}>{contact}</a></p></>) : null}
     </main>
   );
 }

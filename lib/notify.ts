@@ -1,5 +1,6 @@
 // Ranní souhrn, večerní „připravit na zítra“ a připomínky položek.
-// Čisté funkce bez databáze, aby šly snadno vyzkoušet.
+// Čisté funkce bez databáze, aby šly snadno vyzkoušet. Texty podle jazyka rodiče (lib/i18n-server.ts).
+import { S, dayLabel, normLang, typePrefix, type Lang } from "./i18n-server";
 
 export type Kid = { id: string; name: string };
 export type Item = {
@@ -8,18 +9,14 @@ export type Item = {
 };
 export type Settings = {
   morning_on?: boolean; morning_time?: string; evening_on?: boolean; evening_time?: string;
-  event_lead?: number; tz?: string;
+  event_lead?: number; tz?: string; lang?: string | null;
 };
 export type Note = { key: string; title: string; body: string; tag: string };
 
-const DAYS = ["Neděle", "Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", "Sobota"];
 const pad = (n: number) => String(n).padStart(2, "0");
 
 export function addDays(d: string, n: number) {
   const x = new Date(d + "T12:00:00Z"); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10);
-}
-function prettyDay(d: string) {
-  const x = new Date(d + "T12:00:00Z"); return DAYS[x.getUTCDay()] + " " + x.getUTCDate() + ". " + (x.getUTCMonth() + 1) + ".";
 }
 
 /** Místní datum a čas v dané časové zóně. */
@@ -69,7 +66,8 @@ function line(it: Item, kids: Map<string, string>, multi: boolean) {
 }
 
 /** Text souhrnu pro jeden den a výhled na další. Vrací null, když není co hlásit. */
-export function dayDigest(items: Item[], kidList: Kid[], day: string) {
+export function dayDigest(items: Item[], kidList: Kid[], day: string, lang: Lang = "cs") {
+  const L = S[lang];
   const kids = new Map(kidList.map((k) => [k.id, k.name]));
   const multi = kidList.length > 1;
   const occ = expand(items, day, addDays(day, 1)).filter(open);
@@ -78,17 +76,18 @@ export function dayDigest(items: Item[], kidList: Kid[], day: string) {
   const parts: string[] = [];
   const bring = today.filter((i) => i.type === "donest");
   const rest = today.filter((i) => i.type !== "donest");
-  if (bring.length) parts.push("Donést: " + bring.map((i) => line(i, kids, multi)).join(", "));
-  if (rest.length) parts.push("Dnes: " + rest.map((i) => line(i, kids, multi)).join(", "));
+  if (bring.length) parts.push(L.bring + bring.map((i) => line(i, kids, multi)).join(", "));
+  if (rest.length) parts.push(L.todayL + rest.map((i) => line(i, kids, multi)).join(", "));
   const prep = tomorrow.filter((i) => i.type !== "udalost");
   const ev = tomorrow.filter((i) => i.type === "udalost");
-  if (prep.length) parts.push("Na zítra připravit: " + prep.map((i) => line(i, kids, multi)).join(", "));
-  if (ev.length) parts.push("Zítra: " + ev.map((i) => line(i, kids, multi)).join(", "));
+  if (prep.length) parts.push(L.prepTomorrow + prep.map((i) => line(i, kids, multi)).join(", "));
+  if (ev.length) parts.push(L.tomorrowL + ev.map((i) => line(i, kids, multi)).join(", "));
   return parts.length ? parts.join("\n") : null;
 }
 
 /** Večer: co připravit a co se děje zítra. */
-export function eveningDigest(items: Item[], kidList: Kid[], day: string) {
+export function eveningDigest(items: Item[], kidList: Kid[], day: string, lang: Lang = "cs") {
+  const L = S[lang];
   const kids = new Map(kidList.map((k) => [k.id, k.name]));
   const multi = kidList.length > 1;
   const tm = addDays(day, 1);
@@ -96,8 +95,8 @@ export function eveningDigest(items: Item[], kidList: Kid[], day: string) {
   const prep = list.filter((i) => i.type !== "udalost");
   const ev = list.filter((i) => i.type === "udalost");
   const parts: string[] = [];
-  if (prep.length) parts.push("Připravit: " + prep.map((i) => line(i, kids, multi)).join(", "));
-  if (ev.length) parts.push("Zítra: " + ev.map((i) => line(i, kids, multi)).join(", "));
+  if (prep.length) parts.push(L.prep + prep.map((i) => line(i, kids, multi)).join(", "));
+  if (ev.length) parts.push(L.tomorrowL + ev.map((i) => line(i, kids, multi)).join(", "));
   return parts.length ? parts.join("\n") : null;
 }
 
@@ -112,25 +111,23 @@ export function leadFor(it: Item, s: Settings): number | null {
   return lead > 0 ? lead : null;
 }
 
-const pl = (n: number, one: string, few: string, many: string) => (n === 1 ? one : n >= 2 && n <= 4 ? few : many);
-
-function leadText(lead: number, timed: boolean) {
-  if (!timed) return "";
-  if (lead === 0) return "Teď";
-  if (lead < 60) return "Za " + lead + " min";
-  if (lead % 10080 === 0) { const n = lead / 10080; return n === 1 ? "Za týden" : "Za " + n + " " + pl(n, "týden", "týdny", "týdnů"); }
-  if (lead % 1440 === 0) { const n = lead / 1440; return n === 1 ? "Zítra" : "Za " + n + " " + pl(n, "den", "dny", "dní"); }
-  if (lead % 60 === 0) return "Za " + (lead / 60 === 1 ? "hodinu" : lead / 60 + " h");
-  return "Za " + Math.floor(lead / 60) + " h " + (lead % 60) + " min";
+function leadText(lead: number, lang: Lang) {
+  const L = S[lang];
+  if (lead <= 0) return L.now;
+  if (lead < 60) return L.inMin(lead);
+  if (lead % 10080 === 0) return L.inUnits(lead / 10080, "week");
+  if (lead % 1440 === 0) return L.inUnits(lead / 1440, "day");
+  return L.inHours(Math.floor(lead / 60), lead % 60);
 }
 
 /** Celodenní položka: kdy to je, vzhledem k dnešku. */
-function dayText(date: string, today: string) {
+function dayText(date: string, today: string, lang: Lang) {
+  const L = S[lang];
   const n = Math.round((Date.parse(date + "T12:00:00Z") - Date.parse(today + "T12:00:00Z")) / 86400000);
-  if (n <= 0) return "Dnes";
-  if (n === 1) return "Zítra";
-  if (n % 7 === 0) return n === 7 ? "Za týden" : "Za " + n / 7 + " " + pl(n / 7, "týden", "týdny", "týdnů");
-  return "Za " + n + " " + pl(n, "den", "dny", "dní");
+  if (n <= 0) return L.today;
+  if (n === 1) return L.tomorrow;
+  if (n % 7 === 0) return L.inUnits(n / 7, "week");
+  return L.inUnits(n, "day");
 }
 
 /**
@@ -139,6 +136,8 @@ function dayText(date: string, today: string) {
  */
 export function dueNotes(now: Date, s: Settings, items: Item[], kidList: Kid[], windowMin = 20): Note[] {
   const tz = s.tz || "Europe/Prague";
+  const lang = normLang(s.lang);
+  const L = S[lang];
   const local = localNow(now, tz);
   const nowMin = minutesOf(local.time);
   const notes: Note[] = [];
@@ -147,12 +146,12 @@ export function dueNotes(now: Date, s: Settings, items: Item[], kidList: Kid[], 
   const inSlot = (t: string, slack: number) => { const d = nowMin - minutesOf(t); return d >= 0 && d < slack; };
 
   if (s.morning_on !== false && inSlot(s.morning_time || "07:00", 90)) {
-    const body = dayDigest(items, kidList, local.date);
-    notes.push({ key: "morning:" + local.date, title: "Dobré ráno · " + prettyDay(local.date), body: body || "", tag: "morning" });
+    const body = dayDigest(items, kidList, local.date, lang);
+    notes.push({ key: "morning:" + local.date, title: L.morning + " · " + dayLabel(local.date, lang), body: body || "", tag: "morning" });
   }
   if (s.evening_on && inSlot(s.evening_time || "19:00", 90)) {
-    const body = eveningDigest(items, kidList, local.date);
-    notes.push({ key: "evening:" + local.date, title: "Na zítra · " + prettyDay(addDays(local.date, 1)), body: body || "", tag: "evening" });
+    const body = eveningDigest(items, kidList, local.date, lang);
+    notes.push({ key: "evening:" + local.date, title: L.evening + " · " + dayLabel(addDays(local.date, 1), lang), body: body || "", tag: "evening" });
   }
 
   const t = now.getTime();
@@ -167,8 +166,8 @@ export function dueNotes(now: Date, s: Settings, items: Item[], kidList: Kid[], 
     const fire = zonedMs(it.due_date, it.due_time || "00:00", tz) - lead * 60000;
     if (fire > t || t - fire >= windowMin * 60000) continue;
     const kid = it.child_id ? kids.get(it.child_id) : "";
-    const when = it.due_time ? leadText(lead, true) + " · " + it.due_time : dayText(it.due_date, local.date);
-    const prefix = it.type === "donest" ? "Donést: " : it.type === "ukol" ? "Úkol: " : "";
+    const when = it.due_time ? leadText(lead, lang) + " · " + it.due_time : dayText(it.due_date, local.date, lang);
+    const prefix = typePrefix(it.type, lang);
     notes.push({
       key: `item:${it.id}:${it.occ}:${lead}`,
       title: (kid ? kid + ": " : "") + prefix + it.title,

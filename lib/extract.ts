@@ -2,6 +2,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
+import { AI_LANG, type Lang } from "./i18n-server";
 
 export type Kid = { id: string; name: string; cls?: string; school?: string };
 export type ImageInput = { media_type: "image/jpeg" | "image/png" | "image/webp" | "image/gif"; data: string };
@@ -42,11 +43,12 @@ export function pragueToday(): { iso: string; weekday: string } {
   };
 }
 
-function systemPrompt(kids: Kid[], events: KnownEvent[]): string {
+function systemPrompt(kids: Kid[], events: KnownEvent[], lang: Lang): string {
+  const out = AI_LANG[lang];
   const t = pragueToday();
   const list = kids.map((c) => ({ id: c.id, jmeno: c.name, trida: c.cls || "", skola: c.school || "" }));
   const known = events.map((e) => ({ id: e.id, nazev: e.title, datum: e.date, clen: e.childId }));
-  return `Jsi Aloiz, pomocník českých rodin. Ze zprávy (nejčastěji ze školy) vytáhni všechno, co mají členové rodiny udělat, donést, odevzdat nebo kam a kdy mají přijít.
+  return `Jsi Aloiz, pomocník rodin. Ze zprávy (nejčastěji ze školy) vytáhni všechno, co mají členové rodiny udělat, donést, odevzdat nebo kam a kdy mají přijít.
 Dnešní datum: ${t.iso} (${t.weekday}). Relativní výrazy jako "zítra" nebo "ve středu" převeď na konkrétní datum vzhledem k dnešku.
 Členové rodiny (JSON, děti i dospělí): ${JSON.stringify(list)}
 Už uložené události rodiny (JSON): ${JSON.stringify(known)}
@@ -57,8 +59,9 @@ Pravidla:
 - key: krátké označení položky v rámci této odpovědi ("a", "b", "c"...).
 - eventKey: když se úkol nebo věc k donesení týká konkrétní akce (např. donést kytku na besídku, kostým na karneval), dej sem key té události z této odpovědi, nebo id už uložené události. U událostí a nesouvisejících položek null.
 - Když je u zprávy poznámka rodiče, ber ji jako důležitý kontext (např. pro koho to je nebo co platí).
-- uncertain: krátký český popis toho, co chybí nebo je nejisté (např. "Chybí termín"), jinak "".
-- title krátký a výstižný česky, place nebo "", note jedna krátká věta nebo "".
+- Jazyk výstupu: ${out}. V tomto jazyce piš title, note i uncertain, i když je zpráva v jiném jazyce. Vlastní jména, názvy míst a adresy nepřekládej.
+- uncertain: krátký popis toho, co chybí nebo je nejisté (česky např. "Chybí termín"), jinak "".
+- title krátký a výstižný, place nebo "", note jedna krátká věta nebo "".
 - repeat: "weekly", když se akce opakuje každý týden (kroužek, "každé úterý"), jinak "". U opakované akce je date první výskyt a until poslední den (YYYY-MM-DD) nebo null, když konec není uveden.
 - U přeposlaného e-mailu ignoruj podpisy, patičky a historii odpovědí, která se netýká rodiny.
 - Nevymýšlej nic, co ve zprávě není. Když tam nic takového není, vrať prázdný seznam.`;
@@ -75,9 +78,9 @@ function anthropic() {
 }
 
 export async function extractItems(input: {
-  kids: Kid[]; text?: string; note?: string; images?: ImageInput[]; pdfs?: PdfInput[]; events?: KnownEvent[];
+  kids: Kid[]; text?: string; note?: string; images?: ImageInput[]; pdfs?: PdfInput[]; events?: KnownEvent[]; lang?: Lang;
 }): Promise<Found[]> {
-  const { kids, text = "", note = "", images = [], pdfs = [], events = [] } = input;
+  const { kids, text = "", note = "", images = [], pdfs = [], events = [], lang = "cs" } = input;
   if (!text.trim() && !images.length && !pdfs.length) throw new ExtractError("bad_input", "Prázdná zpráva");
 
   const content: Anthropic.ContentBlockParam[] = [];
@@ -94,7 +97,7 @@ export async function extractItems(input: {
     res = await anthropic().messages.parse({
       model: process.env.CLAUDE_MODEL || "claude-sonnet-5-5",
       max_tokens: 16000,
-      system: systemPrompt(kids, events.slice(0, 60)),
+      system: systemPrompt(kids, events.slice(0, 60), lang),
       messages: [{ role: "user", content }],
       output_config: { effort: "medium", format: zodOutputFormat(ResultSchema) },
     });

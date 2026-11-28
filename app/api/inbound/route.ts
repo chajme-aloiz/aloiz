@@ -2,6 +2,7 @@
 // Rodič se pozná podle adresy odesílatele, nalezené položky čekají v aplikaci na kontrolu.
 import { extractItems, isCertain, type Found, type ImageInput, type PdfInput } from "@/lib/extract";
 import { adminClient, emailAllowed } from "@/lib/supabase-server";
+import { S, normLang } from "@/lib/i18n-server";
 
 export const maxDuration = 60;
 
@@ -46,7 +47,9 @@ export async function POST(req: Request) {
     .eq("type", "udalost").gte("due_date", today).order("due_date").limit(60);
   const events = (evRows || []).map((e) => ({ id: e.id, title: e.title, date: e.due_date, childId: e.child_id || "" }));
 
-  const text = [mail.Subject ? "Předmět: " + mail.Subject : "", mail.TextBody?.trim() || htmlToText(mail.HtmlBody || "")]
+  const lang = normLang(profile.lang);
+  const L = S[lang];
+  const text = [mail.Subject ? L.subject + mail.Subject : "", mail.TextBody?.trim() || htmlToText(mail.HtmlBody || "")]
     .filter(Boolean).join("\n\n");
   const images: ImageInput[] = [];
   const pdfs: PdfInput[] = [];
@@ -60,9 +63,9 @@ export async function POST(req: Request) {
   }
 
   try {
-    const items = await extractItems({ kids: kids || [], text, images, pdfs, events });
+    const items = await extractItems({ kids: kids || [], text, images, pdfs, events, lang });
     if (!items.length) return Response.json({ ok: true, matched: true, found: 0 });
-    const label = "E-mail: " + (mail.Subject || "bez předmětu").slice(0, 120);
+    const label = L.email + (mail.Subject || L.noSubject).slice(0, 120);
     const sourceId = await saveSource(db, profile.id, label, text, kept);
 
     // Co má rodič v nastavení povolené ukládat rovnou, uloží se hned. Zbytek čeká na kontrolu.
@@ -71,7 +74,7 @@ export async function POST(req: Request) {
     const direct = items.filter((i) => auto.includes(i.type) && isCertain(i));
     const review = items.filter((i) => !direct.includes(i));
     if (direct.length) {
-      const r = await db.from("items").insert(direct.map((i) => toRow(i, profile.id, label, sourceId, now)));
+      const r = await db.from("items").insert(direct.map((i) => toRow(i, profile.id, label, sourceId, now, L.untitled)));
       if (r.error) { console.error("inbound auto save failed", r.error.message); review.unshift(...direct); direct.length = 0; }
     }
     if (review.length) {
@@ -84,9 +87,9 @@ export async function POST(req: Request) {
   }
 }
 
-function toRow(i: Found, userId: string, label: string, sourceId: string | null, now: number) {
+function toRow(i: Found, userId: string, label: string, sourceId: string | null, now: number, untitled: string) {
   return {
-    id: i.id, user_id: userId, child_id: i.childId || null, type: i.type, title: i.title || "Bez názvu",
+    id: i.id, user_id: userId, child_id: i.childId || null, type: i.type, title: i.title || untitled,
     due_date: i.date, due_time: i.time, place: i.place, note: i.note, done: false, source: label,
     repeat_rule: i.repeat, repeat_until: i.until, skip_dates: [], created_ms: now, parent_id: i.parentId, source_id: sourceId,
   };
