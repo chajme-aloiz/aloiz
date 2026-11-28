@@ -34,6 +34,9 @@ h1{font-weight:300;letter-spacing:-.04em;margin:0;text-wrap:balance}
 .sec{margin-top:28px}
 .row{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
 .row:last-child{border-bottom:none}
+.dayhead{margin-top:22px;padding-bottom:2px;font-size:15px;font-weight:600;color:var(--ink)}
+.eyebrow + .dayhead{margin-top:12px}
+.row:has(+ .dayhead){border-bottom:none}
 .time{width:46px;flex:none;font-size:14px;color:var(--muted);padding-top:2px;font-variant-numeric:tabular-nums}
 .ttl{font-size:16px;font-weight:500}
 .sub{font-size:14px;color:var(--muted);margin-top:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
