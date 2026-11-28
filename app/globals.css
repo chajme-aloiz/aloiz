@@ -104,7 +104,7 @@ html,body{margin:0;min-height:100%}
 .login{min-height:calc(100vh - 40px);display:flex;flex-direction:column;justify-content:center;gap:0}
 .login .logo{width:128px;height:56px}
 .logintop{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.login select.langsel{width:auto;flex:none;min-height:40px;padding:6px 26px 6px 12px;border:1px solid var(--line);border-radius:20px;font-size:14px;color:var(--muted);
+select.langsel{width:auto;flex:none;min-height:40px;padding:6px 26px 6px 12px;border:1px solid var(--line);border-radius:20px;font-size:14px;color:var(--muted);
   appearance:none;-webkit-appearance:none;background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236B6A66' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 11px center}
 :lang(zh) h1,:lang(hi) h1{letter-spacing:0}
 .login h1{font-size:40px;line-height:1.05;margin-top:36px}
@@ -173,6 +173,9 @@ html,body{margin:0;min-height:100%}
 .fold summary svg{flex:none;color:var(--muted);transition:transform .2s}
 .fold[open] summary svg{transform:rotate(90deg)}
 .foldbody{padding:0 0 18px}
+.langrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0}
+.langrow label b{font-weight:500;font-size:16px}
+.langrow select.langsel{color:var(--ink);font-size:15px}
 /* Připomínka: rychlé volby + vlastní počet a jednotka */
 .leadpick{display:flex;flex-direction:column;gap:8px;min-width:0}
 .leadcustom{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:15px;color:var(--muted,#6b6b6b)}
