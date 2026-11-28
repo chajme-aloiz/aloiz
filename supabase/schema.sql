@@ -17,6 +17,7 @@ create table if not exists public.children (
   name text not null,
   cls text not null default '',
   school text not null default '',
+  nicks text not null default '',         -- přezdívky a zdrobněliny pro AI, např. "Alži, Bětka"
   color text not null default '#E39A6B',
   created_at timestamptz not null default now()
 );
