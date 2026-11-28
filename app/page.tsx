@@ -15,6 +15,7 @@ export default function Home() {
       unmount = mount({
         supabase: browserClient(),
         inboundAddress: process.env.NEXT_PUBLIC_INBOUND_ADDRESS || "",
+        whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "",
         appEl: app.current, fabEl: fab.current, toastEl: toast.current,
       });
     });
