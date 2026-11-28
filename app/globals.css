@@ -61,7 +61,9 @@ textarea{resize:vertical;min-height:88px;line-height:1.45}
 label.f,div.f{display:block;font-size:12px;color:var(--muted);margin-top:12px}
 div.f{margin-top:18px}
 .tipwrap{position:relative}
-label.f .info{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-left:6px;padding:0;border:1px solid var(--muted);border-radius:50%;background:none;color:var(--muted);font-family:inherit;font-size:10px;font-weight:600;line-height:1;vertical-align:1px;cursor:pointer}
+label.f.withinfo{display:flex;align-items:center;gap:3px}
+label.f .info{display:inline-flex;align-items:center;justify-content:center;width:18px;height:22px;margin:-5px 0;padding:0;border:0;background:none;color:var(--muted);opacity:.75;cursor:pointer}
+label.f .info svg{display:block}
 .tip{display:none;position:absolute;z-index:20;top:34px;left:0;width:max-content;max-width:240px;padding:10px 12px;border-radius:12px;background:#1A1A1A;color:#fff;font-size:13px;line-height:1.4;box-shadow:0 6px 20px rgba(0,0,0,.15)}
 .tip.right{left:auto;right:0}
 .tip.open{display:block}
