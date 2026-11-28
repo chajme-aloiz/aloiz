@@ -10,14 +10,14 @@ export type PdfInput = { data: string };
 /** Už uložená událost, ke které může nový úkol patřit (např. besídka). */
 export type KnownEvent = { id: string; title: string; date: string; childId: string };
 export type Found = {
-  id: string; type: "udalost" | "ukol" | "donest"; title: string; date: string; time: string; place: string;
+  id: string; type: "udalost" | "ukol"; title: string; date: string; time: string; place: string;
   childId: string; note: string; uncertain: string; repeat: "" | "weekly"; until: string; parentId: string;
 };
 
 const ItemSchema = z.object({
   key: z.string(),
   eventKey: z.string().nullable(),
-  type: z.enum(["udalost", "ukol", "donest"]),
+  type: z.enum(["udalost", "ukol"]),
   title: z.string(),
   date: z.string().nullable(),
   time: z.string().nullable(),
@@ -53,8 +53,8 @@ Dnešní datum: ${t.iso} (${t.weekday}). Relativní výrazy jako "zítra" nebo "
 Členové rodiny (JSON, děti i dospělí): ${JSON.stringify(list)}
 Už uložené události rodiny (JSON): ${JSON.stringify(known)}
 Pravidla:
-- type: "udalost" (akce s časem nebo místem), "ukol" (něco udělat nebo podepsat), "donest" (věc nebo peníze přinést).
-- date ve tvaru YYYY-MM-DD nebo null, time "HH:MM" nebo null. U "donest" a "ukol" je date termín, do kdy.
+- type: "udalost" (akce s časem nebo místem), "ukol" (cokoli udělat, podepsat, zaplatit, odevzdat nebo donést, např. věc nebo peníze).
+- date ve tvaru YYYY-MM-DD nebo null, time "HH:MM" nebo null. U "ukol" je date termín, do kdy.
 - childId: id člena rodiny podle jména, třídy, učitele nebo školy. Když je v rodině jediný člen, použij jeho id. Když to nejde určit, null.
 - key: krátké označení položky v rámci této odpovědi ("a", "b", "c"...).
 - eventKey: když se úkol nebo věc k donesení týká konkrétní akce (např. donést kytku na besídku, kostým na karneval), dej sem key té události z této odpovědi, nebo id už uložené události. U událostí a nesouvisejících položek null.

@@ -74,10 +74,7 @@ export function dayDigest(items: Item[], kidList: Kid[], day: string, lang: Lang
   const today = occ.filter((i) => i.due_date === day).sort(byTime);
   const tomorrow = occ.filter((i) => i.due_date === addDays(day, 1)).sort(byTime);
   const parts: string[] = [];
-  const bring = today.filter((i) => i.type === "donest");
-  const rest = today.filter((i) => i.type !== "donest");
-  if (bring.length) parts.push(L.bring + bring.map((i) => line(i, kids, multi)).join(", "));
-  if (rest.length) parts.push(L.todayL + rest.map((i) => line(i, kids, multi)).join(", "));
+  if (today.length) parts.push(L.todayL + today.map((i) => line(i, kids, multi)).join(", "));
   const prep = tomorrow.filter((i) => i.type !== "udalost");
   const ev = tomorrow.filter((i) => i.type === "udalost");
   if (prep.length) parts.push(L.prepTomorrow + prep.map((i) => line(i, kids, multi)).join(", "));

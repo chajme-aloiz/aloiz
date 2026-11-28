@@ -130,5 +130,5 @@ export function dayLabel(date: string, lang: Lang) {
 
 /** Předpona v kalendáři a upozorněních podle typu položky */
 export function typePrefix(type: string, lang: Lang) {
-  return type === "donest" ? S[lang].bring : type === "ukol" ? S[lang].task : "";
+  return type === "ukol" || type === "donest" ? S[lang].task : ""; // dřívější „donest“ je teď úkol
 }
