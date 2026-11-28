@@ -172,6 +172,7 @@ select.langsel{width:auto;flex:none;min-height:40px;padding:6px 26px 6px 12px;bo
 .fold summary>span{flex:1;min-width:0}
 .fold summary svg{flex:none;color:var(--muted);transition:transform .2s}
 .fold[open] summary svg{transform:rotate(90deg)}
+.fold[open] summary small{display:none}
 .foldbody{padding:0 0 18px}
 .langrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0}
 .langrow label b{font-weight:500;font-size:16px}
